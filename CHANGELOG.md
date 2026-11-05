@@ -8,6 +8,8 @@ All notable changes are documented here, following
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-04
+
 ### Added
 
 - **QR codes on the server, with zero runtime dependencies** (PHP 8.4 and `ext-zlib`). A port of react-fancy's `<QrCode>` encoder: versions 1-40, levels L/M/Q/H, numeric / alphanumeric / byte modes chosen automatically, and the mask chosen by the four penalty rules with the same tie-break. The same input gives the same module matrix as react-fancy, held to by a fixture of 465 matrices generated from the TypeScript. **Consumer action:** none; this is the first release.
