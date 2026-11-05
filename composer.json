@@ -1,0 +1,60 @@
+{
+    "name": "particle-academy/fancy-qr",
+    "description": "QR codes on the server, as SVG and PNG, with zero dependencies: a PHP port of react-fancy's own encoder, so the server and the browser draw the same symbol for the same input. A printable page goes through fine-print. Hostile input is refused from its length and the work is bounded.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "qr",
+        "qr-code",
+        "qrcode",
+        "svg",
+        "png",
+        "barcode",
+        "fancy-ui",
+        "particle-academy"
+    ],
+    "homepage": "https://github.com/Particle-Academy/fancy-qr",
+    "support": {
+        "issues": "https://github.com/Particle-Academy/fancy-qr/issues",
+        "source": "https://github.com/Particle-Academy/fancy-qr"
+    },
+    "authors": [
+        {
+            "name": "Particle Academy",
+            "homepage": "https://github.com/Particle-Academy"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "ext-zlib": "*"
+    },
+    "require-dev": {
+        "particle-academy/fine-print": "^0.6.1",
+        "pestphp/pest": "^5.0"
+    },
+    "suggest": {
+        "particle-academy/fine-print": "To write the printable page from QrCode::finePrintDocument() as a PDF."
+    },
+    "autoload": {
+        "psr-4": {
+            "FancyQr\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FancyQr\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "parity:export": "node tests/fixtures/export-parity.mjs"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    }
+}
