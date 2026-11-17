@@ -1,46 +1,58 @@
-# fancy-qr code map
+# Using fancy-qr — guide for agents
 
-`FancyQr\` is a PHP 8.4 library with zero runtime dependencies: PHP and
-`ext-zlib`, nothing else. `tests/PackageTest.php` fails if `require` gains
-anything, or if `src/` calls an extension it does not declare.
+How an agent installs and uses this package in a consumer app. What the package
+is, is in [README.md](./README.md). Notes for working ON this repo's code are in
+[CONTRIBUTING.md](./CONTRIBUTING.md).
 
-- `Encoder` is a PORT of react-fancy's `src/components/QrCode/qr-encode.ts`,
-  function for function. `Tables` is its `qr-tables.ts`. The contract is the
-  same module matrix for the same input. Do not "improve" the algorithm here:
-  mode selection, version selection, Reed-Solomon, interleaving, placement,
-  masking, format bits, the penalty rules and the mask tie-break (strictly
-  lower score wins, so a tie keeps the lower mask) must all stay as the
-  TypeScript has them. A change belongs in react-fancy first, then here.
-- `Symbol` is the result. `QrCode` is the public facade: `encode`, `svg`,
-  `png`, `finePrintDocument`, `path`. `Png` is the writer (1-bit indexed, the
-  chunk approach of fine-print's `PngEncoder`, written here, not depended on).
-- `QrCode::svg()` must stay byte-identical to react-fancy's `qrCodeSvg()`,
-  escaping included: react-fancy writes `&#39;`, PHP's `ENT_XML1` writes
-  `&apos;`, and `xml()` converts. Both drop C0 controls XML cannot carry.
-- `finePrintDocument()` returns ARRAYS in fine-print's document model. It must
-  never reference a `FinePrint\` class: fine-print is a dev dependency and a
-  `suggest` only.
-- No regular expressions in `src/`. Character classes are checked with
-  `strspn`.
+## Install
 
-Hostile input: the length check in `Encoder::encode` runs before anything
-reads the value (strlen only), and every later step is bounded by version 40.
-Keep any new code path behind that check.
+```bash
+composer require particle-academy/fancy-qr
+```
 
-## Tests
+- **PHP:** `^8.4` with `ext-zlib`. No other runtime dependency.
+- **Optional:** `composer require particle-academy/fine-print` to write
+  `finePrintDocument()` as a PDF.
+- In the browser, react-fancy's `<QrCode>` draws the same symbol for the same
+  input.
 
-- `tests/fixtures/parity.json` is GENERATED from react-fancy by
-  `node tests/fixtures/export-parity.mjs [path/to/react-fancy]` (default: the
-  sibling checkout in the Fancy envelope, with its `node_modules`). Never edit
-  it by hand and never regenerate it from this package. Regenerate when
-  react-fancy's encoder or `qrCodeSvg` changes, and expect the matrix cases to
-  be unchanged unless the encoder genuinely changed. `generatedFrom` records
-  the react-fancy version and commit.
-- `tests/StandardTest.php` holds anchors independent of the TypeScript: the
-  standard's 5-Q worked example (its input really contains a backslash), the
-  three-way block table check, published version strings.
-- `tests/FinePrintTest.php` writes a real PDF with fine-print, renders the page
-  and samples the code back into modules.
-- `tests/Support/PngReader.php` reads PNGs back with no code shared with `Png`.
-  `read()` is a PHP array per pixel: use `raw()` + `pixel()` or `header()` for
-  anything large, or the suite runs out of memory.
+## Find it on the Fancy MCP server
+
+The catalog server is `https://ui.particle.academy/mcp` (streamable HTTP, no API
+key; MCP id `fancy-ui`). This package's registry entry is `fancy-qr`. As a
+server-side package it is found with `search-backend-packages` (stack `php`);
+`install-instructions` gives the exact install commands.
+
+## API essentials
+
+All on `FancyQr\QrCode`:
+
+- `QrCode::svg($value, label: '...')`: an SVG file with `<title>` and an
+  accessible name. Byte-identical to react-fancy's `qrCodeSvg()`.
+- `QrCode::png($value, scale: 12)`: a 1-bit indexed PNG.
+- `QrCode::encode($value, errorCorrection: 'Q')`: a `Symbol` with `modules`,
+  `size`, `version`, `mode`, `mask`, `rows()`.
+- `QrCode::finePrintDocument($value, label: '...', sizeMm: 50, showValue: true)`:
+  plain arrays in fine-print's document model, for `FinePrint\Agent::toBytes()`
+  or for composing into a larger document via `$doc['blocks']`.
+- Options: `errorCorrection` (`L`, `M` default, `Q`, `H`), `mode`, `version`,
+  `quietZone` (4), `foreground` / `background`, `size` (svg), `scale` (png).
+
+## Traps
+
+- **`svg()` requires a `label`** saying what the code is for. On a web page,
+  show the value as text beside the code too.
+- **Keep the background the lighter colour.** Most scanners do not read an
+  inverted code, and the quiet zone must be light. Do not set `quietZone` to 0
+  unless you add your own margin.
+- **`png()` takes only `#rgb` or `#rrggbb`** and throws `QrException`
+  otherwise. Files are always opaque: `transparent` becomes white.
+- **A value that does not fit throws `ValueTooLongException`.** Nothing is
+  truncated. Capacity at version 40, level `L`: 7089 digits, 4296
+  alphanumeric, 2953 bytes; a higher level holds less.
+- A PNG is at most 8192 pixels a side, whatever `scale` asks for.
+- **`showValue: false`** for a value not meant to be read out, such as a WiFi
+  password.
+- fine-print's standard fonts cover Windows-1252; register a TrueType font for
+  other scripts.
+- Kanji mode, ECI and structured append are not supported.
